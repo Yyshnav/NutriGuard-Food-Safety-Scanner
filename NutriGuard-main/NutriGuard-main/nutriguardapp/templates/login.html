@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css">
+</head>
+<body>
+    <center>
+    <div>
+        <form method="post">
+            {% csrf_token %}
+            <div> 
+                <h1><i class="fa-solid fa-circle-user"></i></h1>
+                <input type="email" placeholder="Email" name="username">
+            </div>
+            <div><input type="password" placeholder="Password" name="password"></div>
+            <button type="submit">Login</button><br>
+            <a href="#">Forget password</a>
+        </form>
+    </div>
+    </center>
+</body>
+</html>

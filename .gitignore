@@ -1,0 +1,47 @@
+# ==============================================================================
+# Flutter / Dart
+# ==============================================================================
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.pub/
+**/.pub-cache/
+**/local.properties
+**/android/.gradle/
+**/android/captures/
+**/android/gradle/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/*.iml
+**/.idea/
+**/.vscode/
+
+# ==============================================================================
+# Python / Django
+# ==============================================================================
+**/.env
+*.env
+**/.env.*
+!*.env.example
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3-journal
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.log
+
+# ==============================================================================
+# Operating System
+# ==============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
