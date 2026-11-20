@@ -950,3 +950,80 @@ RULES:
             'message': 'success',
             'reply': ai_reply
         }, status=status.HTTP_200_OK)
+
+
+class SavedProductView(APIView):
+    def get(self, request, user_id):
+        print("====== GET SAVED PRODUCTS user_id:", user_id)
+        user_obj = usertable.objects.filter(login_id__id=user_id).first()
+        if not user_obj:
+            user_obj = usertable.objects.filter(id=user_id).first()
+
+        if not user_obj:
+            return Response({'message': 'failed', 'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        saved_items = savedproducttable.objects.filter(user_id=user_obj).order_by('-id')
+        items = []
+        for item in saved_items:
+            items.append({
+                'id': item.id,
+                'name': item.product_name or 'Saved Product',
+                'brand': item.brand or '',
+                'score': f"{item.health_score or 50}/100",
+                'health_score': item.health_score or 50,
+                'ingredients': item.ingredients or '',
+                'saved_date': item.saved_date.strftime('%b %d, %Y') if item.saved_date else '',
+            })
+
+        return Response({'message': 'success', 'saved_products': items}, status=status.HTTP_200_OK)
+
+    def post(self, request, user_id):
+        print("====== SAVE PRODUCT REQUEST user_id:", user_id, "DATA:", request.data)
+        user_obj = usertable.objects.filter(login_id__id=user_id).first()
+        if not user_obj:
+            user_obj = usertable.objects.filter(id=user_id).first()
+
+        if not user_obj:
+            return Response({'message': 'failed', 'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        product_name = str(request.data.get('product_name', '')).strip()
+        brand = str(request.data.get('brand', '')).strip()
+        health_score = request.data.get('health_score', 50)
+        ingredients = str(request.data.get('ingredients', '')).strip()
+
+        if not product_name:
+            return Response({'message': 'failed', 'error': 'product_name is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if already saved by this user
+        existing = savedproducttable.objects.filter(user_id=user_obj, product_name=product_name).first()
+        if existing:
+            return Response({'message': 'already_saved', 'id': existing.id}, status=status.HTTP_200_OK)
+
+        score_int = 50
+        try:
+            score_int = int(health_score)
+        except Exception:
+            pass
+
+        item = savedproducttable.objects.create(
+            user_id=user_obj,
+            product_name=product_name[:150],
+            brand=brand[:100],
+            health_score=score_int,
+            ingredients=ingredients[:500]
+        )
+
+        return Response({'message': 'success', 'id': item.id}, status=status.HTTP_201_CREATED)
+
+
+class RemoveSavedProductView(APIView):
+    def post(self, request, item_id):
+        print("====== DELETE SAVED PRODUCT item_id:", item_id)
+        savedproducttable.objects.filter(id=item_id).delete()
+        return Response({'message': 'success'}, status=status.HTTP_200_OK)
+
+    def delete(self, request, item_id):
+        print("====== DELETE SAVED PRODUCT item_id:", item_id)
+        savedproducttable.objects.filter(id=item_id).delete()
+        return Response({'message': 'success'}, status=status.HTTP_200_OK)
+

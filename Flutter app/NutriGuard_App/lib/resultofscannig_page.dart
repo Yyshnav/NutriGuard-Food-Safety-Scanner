@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:nutriguardapp/login_page.dart';
+import 'package:nutriguardapp/signup_page.dart';
 import 'package:nutriguardapp/saved_product_page.dart';
 
 class AnalysisResultScreen extends StatefulWidget {
@@ -12,6 +15,98 @@ class AnalysisResultScreen extends StatefulWidget {
 
 class _AnalysisResultScreenState extends State<AnalysisResultScreen> {
   int _selectedTabIndex = 0;
+  bool _isSaving = false;
+  bool _isSaved = false;
+
+  // --- Save Product Handler (Triggered ONLY when user explicitly clicks save) ---
+  Future<void> _saveProduct() async {
+    if (_isSaved || _isSaving) return;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to save products.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final info = widget.data;
+      final productName = info?['product_name']?.toString() ?? "Food Product";
+      final brand = info?['brand']?.toString() ?? "";
+      final score = int.tryParse(info?['health_score']?.toString() ?? '') ?? 65;
+      final ingredientsList = (info?['ingredients'] as List?)?.join(', ') ?? 
+          info?['ingredients']?.toString() ?? '';
+
+      final dio = Dio();
+      final response = await dio.post(
+        '$baseurl/save-product/$userId',
+        data: {
+          'product_name': productName,
+          'brand': brand,
+          'health_score': score,
+          'ingredients': ingredientsList,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        setState(() {
+          _isSaved = true;
+          _isSaving = false;
+        });
+
+        if (mounted) {
+          final message = response.data['message'] == 'already_saved'
+              ? 'Product is already in your Saved list!'
+              : 'Product saved to Saved Products!';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(message)),
+                ],
+              ),
+              backgroundColor: const Color(0xFF249B62),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        setState(() {
+          _isSaving = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to save product. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error saving product: $e");
+      setState(() {
+        _isSaving = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save product. Check your network connection.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +151,18 @@ class _AnalysisResultScreenState extends State<AnalysisResultScreen> {
           style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isSaved ? Icons.bookmark : Icons.bookmark_border,
+              color: _isSaved ? healthGreen : primaryBlue,
+              size: 26,
+            ),
+            tooltip: _isSaved ? 'Saved' : 'Save Product',
+            onPressed: _isSaved || _isSaving ? null : _saveProduct,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -271,37 +378,57 @@ class _AnalysisResultScreenState extends State<AnalysisResultScreen> {
               ),
               const SizedBox(height: 30),
 
-              // 6. Action Buttons
+              // 6. Action Buttons: Save Product + View Saved
               Row(
                 children: [
                   Expanded(
                     flex: 3,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SavedProductsScreen()),
-                        );
-                      },
+                    child: ElevatedButton.icon(
+                      onPressed: _isSaved || _isSaving ? null : _saveProduct,
+                      icon: _isSaving
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Icon(
+                              _isSaved ? Icons.check_circle : Icons.bookmark_add_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                      label: Text(
+                        _isSaving
+                            ? 'Saving...'
+                            : (_isSaved ? 'Saved' : 'Save Product'),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryBlue,
+                        backgroundColor: _isSaved ? healthGreen : primaryBlue,
+                        disabledBackgroundColor: _isSaved ? healthGreen : Colors.grey,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Saved Products', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     flex: 2,
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SavedProductsScreen()),
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: Colors.grey, width: 1.5),
+                        side: const BorderSide(color: primaryBlue, width: 1.5),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Done', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'View Saved',
+                        style: TextStyle(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
                     ),
                   ),
                 ],

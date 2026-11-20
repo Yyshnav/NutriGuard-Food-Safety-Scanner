@@ -51,3 +51,10 @@ class Histroyserializers(serializers.ModelSerializer):
         model=historytable
         fields=['user_id','product_id','health_score','scanned_date']
 
+
+class Savedproductserializers(serializers.ModelSerializer):
+    class Meta:
+        model = savedproducttable
+        fields = ['id', 'user_id', 'product_name', 'brand', 'health_score', 'ingredients', 'saved_date']
+
+

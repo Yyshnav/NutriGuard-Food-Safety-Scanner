@@ -37,5 +37,8 @@ urlpatterns = [
     path('complaint/<int:user_id>', ComplaintApiView.as_view(), name="complaint-api"),
     path('rating-feedback/<int:user_id>', RatingApiView.as_view(), name="rating-feedback-api"),
     path('chatbot/<int:user_id>', ChatBotView.as_view(), name="chatbot-api"),
+    path('saved-products/<int:user_id>', SavedProductView.as_view(), name="saved-products"),
+    path('save-product/<int:user_id>', SavedProductView.as_view(), name="save-product"),
+    path('delete-saved-product/<int:item_id>', RemoveSavedProductView.as_view(), name="delete-saved-product"),
 ]
  

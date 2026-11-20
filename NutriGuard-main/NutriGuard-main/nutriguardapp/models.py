@@ -77,3 +77,12 @@ class historytable(models.Model):
     product_id = models.ForeignKey( packetfoodtable,on_delete=models.CASCADE,null=True, blank=True)
     health_score = models.IntegerField(null=True, blank=True)
     scanned_date = models.DateTimeField(auto_now_add=True)
+
+
+class savedproducttable(models.Model):
+    user_id = models.ForeignKey(usertable, on_delete=models.CASCADE, null=True, blank=True)
+    product_name = models.CharField(max_length=150, null=True, blank=True)
+    brand = models.CharField(max_length=100, null=True, blank=True)
+    health_score = models.IntegerField(null=True, blank=True)
+    ingredients = models.TextField(null=True, blank=True)
+    saved_date = models.DateTimeField(auto_now_add=True)
